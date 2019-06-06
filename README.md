@@ -28,7 +28,8 @@ npm install --save gatsby-source-apiserver@next
 
 - `2.1.2`:
   - Upgrade axios to 0.19.0 to fix DoS vulnerability
-  - Fix BoundActionCreators depracation warning
+  - Fix multiple deprecation warnings
+  - Ran `npm audit fix` to take care of audit warnings
 - `2.1.1`:
   - Support multiple entities for multiple api servers, pls take a look at attribute `entitiesArray`
   - Add request params
