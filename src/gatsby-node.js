@@ -92,7 +92,7 @@ exports.sourceNodes = async ({
     const params = entity.params ? entity.params : attributes.params
     const payloadKey = entity.payloadKey ? entity.payloadKey : attributes.payloadKey
     const name = entity.name ? entity.name : attributes.name
-    const entityLevel = entity.entityLevel ? entity.entityLevel : attributes.entityLevel 
+    const entityLevel = entity.entityLevel ? entity.entityLevel : attributes.entityLevel
     const schemaType = entity.schemaType ? entity.schemaType : attributes.schemaType
     const enableDevRefresh = entity.enableDevRefresh ? entity.enableDevRefresh : attributes.enableDevRefresh
     const refreshId = entity.refreshId ? entity.refreshId : attributes.refreshId
@@ -112,7 +112,14 @@ exports.sourceNodes = async ({
 
     // Interpolate entities from nested response
     if (entityLevel) {
-      entities = objectRef(entities, entityLevel)
+      if (Array.isArray(entities)) {
+        entities = entities.reduce(
+          (acc, cur) => [...acc, ...objectRef(cur, entityLevel)],
+          []
+        )
+      } else {
+        entities = objectRef(entities, entityLevel)
+      }
     }
 
     // If entities is a single object, add to array to prevent issues with creating nodes
