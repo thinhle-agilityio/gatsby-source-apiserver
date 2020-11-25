@@ -1,5 +1,5 @@
 /node_modules
 /__tests__
-/*.js
+
 !index.js
 tags
