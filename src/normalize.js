@@ -23,7 +23,7 @@ const conflictFieldPrefix = `alternative_`
 const restrictedNodeFields = [`id`, `children`, `parent`, `fields`, `internal`]
 
 // Create nodes from entities
-exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, reporter}) => {
+exports.createNodesFromEntities = ({entities = [], entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, reporter}) => {
 
   // Standardize and clean keys
   entities = standardizeKeys(entities)
