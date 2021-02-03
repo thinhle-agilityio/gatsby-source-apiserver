@@ -9,6 +9,7 @@ async function doFetch(method, url, headers, data, params, auth, reporter, route
   let completeResult = []
   let haveMorePages = false
   let curUrl = url
+  let curData = data
   let context = {}
   let didPage = false
 
@@ -17,7 +18,7 @@ async function doFetch(method, url, headers, data, params, auth, reporter, route
       method: method,
       url: curUrl,
       headers: headers,
-      data: data,
+      data: curData,
       params: params
     };
     if (auth) {
@@ -33,11 +34,12 @@ async function doFetch(method, url, headers, data, params, auth, reporter, route
       completeResult.push(routeData)
       if (calculateNextPage) {
         try {
-          const nextPage = calculateNextPage(curUrl, response, context);
+          const nextPage = calculateNextPage(curUrl, curData, response, context);
           if (nextPage.hasNext) {
             didPage = true
             haveMorePages = nextPage.hasNext;
             curUrl = nextPage.url
+            curData = nextPage.data
             reporter.verbose(`have more data, next page ${curUrl}`)
           }
         } catch (e) {

@@ -181,7 +181,8 @@ plugins: [
             context.page = page
             const url = `http://yourapi.com/api/v1/posts?page=${page}`
             const hasNext = response.data.length >= 100
-            return { url, hasNext }
+            data = {"page":`${page}`} // if you'd rather send page iteration via request body
+            return { url, hasNext, data }
           }   
         }
       ]
