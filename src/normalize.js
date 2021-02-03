@@ -23,7 +23,7 @@ const conflictFieldPrefix = `alternative_`
 const restrictedNodeFields = [`id`, `children`, `parent`, `fields`, `internal`]
 
 // Create nodes from entities
-exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, reporter}) => {
+exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, reporter, existingNodes, deleteNode}) => {
 
   // Standardize and clean keys
   entities = standardizeKeys(entities)
@@ -42,6 +42,8 @@ exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh
   if (devRefresh && !enableRefreshEndpoint) {
     log(chalk`{bgCyan.black Plugin ApiServer} {yellow warning} enableDevRefresh only works with ENABLE_GATSBY_REFRESH_ENDPOINT enabled.\n{bgCyan.black Plugin ApiServer} see https://www.gatsbyjs.org/docs/environment-variables/#reserved-environment-variables`)
   }
+
+    const foundNodeIds = [];
 
   entities.forEach(e => {
     const { __type, ...entity } = e
@@ -64,6 +66,11 @@ exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh
       if (entity[refreshId]) {
         id = entity[refreshId];
       }
+
+      // remember created node, skip dummy
+      if(id !== dummyEntity.id) {
+        foundNodeIds.push(id);
+      }
     }
 
     const node = {
@@ -80,6 +87,23 @@ exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh
     // console.log(`node: `, node);
     createNode(node);
   })
+
+  if (devRefresh) {
+    /**
+     * Goal: Remove nodes that don't exist in the API anymore.
+     * Compare created node ids (foundNodeIds) with the existing ones . Remove the existing nodes
+     * we didn't create. That way we have a clean state not only of updated but also removed nodes
+     */
+    const existingNodeIds = existingNodes.map(node => node.alternative_id).filter(node => !!node);
+    const missingNodeIds = existingNodeIds.filter(value => !foundNodeIds.includes(value));
+    const missingNodes = missingNodeIds.map(id => _existingNodes.find(node => node.alternative_id === id));
+
+    missingNodes.forEach(node => {
+      reporter.info('Source Apiserver: Remove node with id', node.id);
+      deleteNode({node});
+    });
+  }
+
 }
 
 // If entry is not set by user, provide an empty value of the same type

@@ -38,7 +38,7 @@ exports.sourceNodes = async ({
 }) => {
   //store the attributes in an object to avoid naming conflicts
   const attributes = {typePrefix, url, method, headers, data, localSave, skipCreateNode, path, auth, params, payloadKey, name, entityLevel, schemaType, enableDevRefresh, refreshId}
-  const { createNode } = actions;
+  const { createNode, deleteNode } = actions;
 
   // If true, output some info as the plugin runs
   let verbose = verboseOutput
@@ -92,7 +92,7 @@ exports.sourceNodes = async ({
     const params = entity.params ? entity.params : attributes.params
     const payloadKey = entity.payloadKey ? entity.payloadKey : attributes.payloadKey
     const name = entity.name ? entity.name : attributes.name
-    const entityLevel = entity.entityLevel ? entity.entityLevel : attributes.entityLevel 
+    const entityLevel = entity.entityLevel ? entity.entityLevel : attributes.entityLevel
     const schemaType = entity.schemaType ? entity.schemaType : attributes.schemaType
     const enableDevRefresh = entity.enableDevRefresh ? entity.enableDevRefresh : attributes.enableDevRefresh
     const refreshId = entity.refreshId ? entity.refreshId : attributes.refreshId
@@ -128,6 +128,10 @@ exports.sourceNodes = async ({
       return
     }
 
+    const existingNodes = getNodes().filter(
+      n => n.internal.owner === `gatsby-source-apiserver`
+    )
+
     // Generate the nodes
     normalize.createNodesFromEntities({
         entities,
@@ -138,7 +142,9 @@ exports.sourceNodes = async ({
         refreshId,
         createNode,
         createNodeId,
-        reporter})
+        reporter,
+        existingNodes,
+        deleteNode})
 
     })
 
