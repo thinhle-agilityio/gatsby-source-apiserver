@@ -36,6 +36,7 @@ exports.sourceNodes = async ({
   allowCache = false,
   maxCacheDurationSeconds = 60 * 60 * 24
 }) => {
+  const cache = getCache('gatsby-source-apiserver')
   //store the attributes in an object to avoid naming conflicts
   const attributes = {typePrefix, url, method, headers, data, localSave, skipCreateNode, path, auth, params, payloadKey, name, entityLevel, schemaType, enableDevRefresh, refreshId}
   const { createNode } = actions;
@@ -57,22 +58,6 @@ exports.sourceNodes = async ({
       console.error('\nEncountered authentication error: ' + error);
     }
     console.timeEnd('\nAuthenticate user');
-  }
-
-  const cache = getCache('gatsby-source-apiserver')
-
-  let useCache = allowCache
-  if (allowCache) {
-    const cacheTimestamp = await cache.get('cacheTimestamp')
-    if (cacheTimestamp) {
-      const cacheDate = new Date(cacheTimestamp)
-      const cacheMillis = cacheDate.getTime()
-      const ageInMillis = Date.now() - cacheMillis
-      useCache = ageInMillis < (maxCacheDurationSeconds * 1000)
-      if (!useCache) {
-        reporter.info(`not using cache as its too old ${ageInMillis / 1000}s`)
-      }
-    }
   }
 
   await forEachAsync(entitiesArray, async (entity) => {
@@ -108,7 +93,7 @@ exports.sourceNodes = async ({
 
 
     // Fetch the data
-    let entities = await fetch({url, method, headers, data, name, localSave, path, payloadKey, auth, params, verbose, reporter, cache, useCache, shouldCache: allowCache, maxCacheDurationSeconds, calculateNextPage})
+    let entities = await fetch({url, method, headers, data, name, localSave, path, payloadKey, auth, params, verbose, reporter, cache, shouldCache: allowCache, maxCacheDurationSeconds, calculateNextPage})
 
     // Interpolate entities from nested response
     if (entityLevel) {

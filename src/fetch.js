@@ -4,6 +4,7 @@ const stringify = require(`json-stringify-safe`)
 const httpExceptionHandler = require(`./http-exception-handler`)
 const chalk = require('chalk')
 const log = console.log
+const { digest } = require('./helpers')
 
 async function doFetch(method, url, headers, data, params, auth, reporter, routeData, calculateNextPage) {
   let completeResult = []
@@ -64,7 +65,6 @@ async function fetch({
   verbose,
   reporter,
   cache,
-  useCache,
   shouldCache,
   maxCacheDurationSeconds,
   calculateNextPage
@@ -72,9 +72,35 @@ async function fetch({
 
   let allRoutes
   let routeData
+  const cacheKey = digest(JSON.stringify({
+    url: url,
+    method: method,
+    headers: headers,
+    data: data,
+    name: name,
+    path: path,
+    payloadKey: payloadKey,
+    auth: auth,
+    params: params
+  }));
+  const timestampKey = `${cacheKey}-timestamp`;
+
+  let useCache = shouldCache;
+  if (shouldCache) {
+    const cacheTimestamp = await cache.get(timestampKey);
+    if (cacheTimestamp) {
+      const cacheDate = new Date(cacheTimestamp);
+      const cacheMillis = cacheDate.getTime();
+      const ageInMillis = Date.now() - cacheMillis;
+      useCache = ageInMillis < maxCacheDurationSeconds * 1000;
+      if (!useCache) {
+        reporter.info(`not using cache as its too old ${ageInMillis / 1000}s`);
+      }
+    }
+  }
 
   // Attempt to download the data from api
-  routeData = useCache && await cache.get(url)
+  routeData = useCache && await cache.get(cacheKey)
 
   if (payloadKey && calculateNextPage) {
     reporter.panic('payloadKey and calculateNextPage currently dont work together yet', new Error('payloadKey and calculateNextPage currently dont work together yet'))
@@ -84,8 +110,8 @@ async function fetch({
     try {
       routeData = await doFetch(method, url, headers, data, params, auth, reporter, routeData, calculateNextPage);
       if (shouldCache) {
-        await cache.set(url, routeData)
-        await cache.set('cacheTimestamp', new Date().toISOString())
+        await cache.set(cacheKey, routeData)
+        await cache.set(timestampKey, new Date().toISOString())
       }
     } catch (e) {
       console.log('\nGatsby Source Api Server response error:\n', e.response.data && e.response.data.errors)

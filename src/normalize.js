@@ -1,20 +1,9 @@
-const crypto = require(`crypto`)
 const stringify = require(`json-stringify-safe`)
 const deepMapKeys = require(`deep-map-keys`)
 const nanoid = require(`nanoid`)
 const chalk = require('chalk')
 const log = console.log
-
-/**
- * Encrypts a String using md5 hash of hexadecimal digest.
- *
- * @param {any} str
- */
-const digest = str =>
-  crypto
-    .createHash(`md5`)
-    .update(str)
-    .digest(`hex`)
+const { digest } = require('./helpers')
 
 // Prefix to use if there is a conflict with key name
 const conflictFieldPrefix = `alternative_`
