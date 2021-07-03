@@ -1,20 +1,8 @@
-const crypto = require(`crypto`)
 const stringify = require(`json-stringify-safe`)
 const deepMapKeys = require(`deep-map-keys`)
 const nanoid = require(`nanoid`)
 const chalk = require('chalk')
 const log = console.log
-
-/**
- * Encrypts a String using md5 hash of hexadecimal digest.
- *
- * @param {any} str
- */
-const digest = str =>
-  crypto
-    .createHash(`md5`)
-    .update(str)
-    .digest(`hex`)
 
 // Prefix to use if there is a conflict with key name
 const conflictFieldPrefix = `alternative_`
@@ -23,7 +11,7 @@ const conflictFieldPrefix = `alternative_`
 const restrictedNodeFields = [`id`, `children`, `parent`, `fields`, `internal`]
 
 // Create nodes from entities
-exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, reporter}) => {
+exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh, enableRefreshEndpoint, refreshId, createNode, createNodeId, createContentDigest, reporter}) => {
 
   // Standardize and clean keys
   entities = standardizeKeys(entities)
@@ -53,7 +41,7 @@ exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh
     //   })
     // }
 
-    let id = entity.id === 'dummy' ? 'dummy' : createGatsbyId(createNodeId);
+    let id = entity.id === 'dummy' ? createNodeId('dummy') : createGatsbyId(createNodeId);
 
     // override ID for dev refresh
     // see https://github.com/gatsbyjs/gatsby/issues/14653
@@ -74,7 +62,8 @@ exports.createNodesFromEntities = ({entities, entityType, schemaType, devRefresh
       internal: {
         type: __type,
         mediaType: 'application/json',
-        contentDigest: digest(JSON.stringify(entity))
+        content: JSON.stringify(entity),
+        contentDigest: createContentDigest(entity),
       }
     };
     // console.log(`node: `, node);
