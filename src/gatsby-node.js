@@ -11,6 +11,7 @@ const forEachAsync = require('./helpers').forEachAsync
 exports.sourceNodes = async ({
   actions,
   createNodeId,
+  createContentDigest,
   reporter,
   getCache
 }, {
@@ -138,6 +139,7 @@ exports.sourceNodes = async ({
         refreshId,
         createNode,
         createNodeId,
+        createContentDigest,
         reporter})
 
     })
